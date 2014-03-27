@@ -1,9 +1,9 @@
 package session
 
 import (
-	"bytechan/session/list" //这个 list 可以复用 Element 本身, 而不仅仅是 Element.Value
 	"errors"
 	"fmt"
+	"github.com/chanxuehong/session/list" //这个 list 可以复用 Element 本身, 而不仅仅是 Element.Value
 	"sync"
 	"time"
 )
