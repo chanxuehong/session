@@ -4,7 +4,7 @@
 
 // Package list implements a doubly linked list, used in certain environments.
 //
-//  note: fork from bytechan/util/list, used in certain environments,
+//  NOTE: fork from github.com/chanxuehong/util/list, used in certain environments,
 //  does not have universal, generic list, please refer to
 //  container/list or bytechan/util/list
 //
