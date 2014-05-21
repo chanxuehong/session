@@ -56,8 +56,7 @@ type Storage struct {
 	maxAge int64 // seconds; Storage 里的 item 的生命期.
 
 	// 对于过期的 list.Element:
-	// 如果 lruList.Len()+freeList.Len() <= capacity, 则不物理删除, 只是移动到 freeList
-	// 这个链表上;
+	// 如果 lruList.Len()+freeList.Len() <= capacity, 则不物理删除, 只是移动到 freeList 链表上;
 	// 如果 lruList.Len()+freeList.Len() > capacity, 物理删除超过部分的.
 	capacity int
 }
