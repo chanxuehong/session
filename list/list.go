@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package list implements a doubly linked list, used in certain environments.
+// Package list implements a doubly linked list, used in special environments.
 //
-//  NOTE: fork from github.com/chanxuehong/util/list, used in certain environments,
-//  does not have universal, generic list, please refer to
-//  container/list or bytechan/util/list
+//  NOTE: forked from github.com/chanxuehong/util/list, used in a particular environment,
+//  does not have the versatility. To use a common list, please refer to
+//  github.com/chanxuehong/util/list or
+//  container/list.
 //
 // To iterate over a list (where l is a *List):
 //	for e := l.Front(); e != nil; e = e.Next() {
@@ -15,8 +16,6 @@
 package list
 
 // Element is an element of a linked list.
-//
-//  note: 类型具化以提高程序性能和编码方便, 减少内存引用以减少 GC 时间
 type Element struct {
 	// Next and previous pointers in the doubly-linked list of elements.
 	// To simplify the implementation, internally a list l is implemented
@@ -31,7 +30,7 @@ type Element struct {
 	// The value stored with this element.
 	Key        string
 	Value      interface{}
-	Expiration int64
+	Expiration int64 // unixtime
 }
 
 // Next returns the next list element or nil.
@@ -269,4 +268,36 @@ func (l *List) MoveAfter(e, mark *Element) *Element {
 		return e
 	}
 	return l.insertAfter(l.remove(e), mark)
+}
+
+// PushBackList inserts a copy of an other list at the back of list l.
+// The lists l and other may be the same.
+func (l *List) PushBackList(other *List) {
+	l.lazyInit()
+	for e := other.Front(); e != nil; e = e.Next() {
+		l.insertBefore(
+			&Element{
+				Key:        e.Key,
+				Value:      e.Value,
+				Expiration: e.Expiration,
+			},
+			&l.root,
+		)
+	}
+}
+
+// PushFrontList inserts a copy of an other list at the front of list l.
+// The lists l and other may be the same.
+func (l *List) PushFrontList(other *List) {
+	l.lazyInit()
+	for e := other.Back(); e != nil; e = e.Prev() {
+		l.insertAfter(
+			&Element{
+				Key:        e.Key,
+				Value:      e.Value,
+				Expiration: e.Expiration,
+			},
+			&l.root,
+		)
+	}
 }
