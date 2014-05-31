@@ -231,12 +231,10 @@ func (s *Storage) remove(e *list.Element) {
 // Add key-value to Storage.
 //  if there already exists a item with the same key, then return ErrNotStored,
 //  otherwise it returns nil.
-func (s *Storage) Add(key string, value interface{}) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
+func (s *Storage) Add(key string, value interface{}) (err error) {
 	timenow := time.Now().Unix()
 
+	s.mu.Lock()
 	if e, hit := s.cache[key]; hit {
 		if timenow > e.Expiration {
 			//e.Key = key
@@ -244,70 +242,80 @@ func (s *Storage) Add(key string, value interface{}) error {
 			e.Expiration = timenow + s.maxAge
 
 			s.lruList.MoveToFront(e)
-			return nil
+
+			s.mu.Unlock()
+			return
 		} else {
-			return ErrNotStored
+			err = ErrNotStored
+			s.mu.Unlock()
+			return
 		}
 	} else {
-		return s.add(key, value, timenow)
+		err = s.add(key, value, timenow)
+		s.mu.Unlock()
+		return
 	}
 }
 
 // Set key-value, unconditional
-func (s *Storage) Set(key string, value interface{}) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
+func (s *Storage) Set(key string, value interface{}) (err error) {
 	timenow := time.Now().Unix()
 
+	s.mu.Lock()
 	if e, hit := s.cache[key]; hit {
 		//e.Key = key
 		e.Value = value
 		e.Expiration = timenow + s.maxAge
 
 		s.lruList.MoveToFront(e)
-		return nil
+		s.mu.Unlock()
+		return
 	} else {
-		return s.add(key, value, timenow)
+		err = s.add(key, value, timenow)
+		s.mu.Unlock()
+		return
 	}
 }
 
 // Get the element with key. if there is no such element with the key it returns ErrNotFound
-func (s *Storage) Get(key string) (interface{}, error) {
+func (s *Storage) Get(key string) (value interface{}, err error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	if e, hit := s.cache[key]; hit {
 		if timenow := time.Now().Unix(); timenow > e.Expiration {
 			s.remove(e)
-			return nil, ErrNotFound
+			err = ErrNotFound
+			s.mu.Unlock()
+			return
 		} else {
 			e.Expiration = timenow + s.maxAge
 			s.lruList.MoveToFront(e)
-			return e.Value, nil
+			value = e.Value
+			s.mu.Unlock()
+			return
 		}
 	} else {
-		return nil, ErrNotFound
+		err = ErrNotFound
+		s.mu.Unlock()
+		return
 	}
 }
 
 // Delete the element with key. if there is no such element, Delete is a no-op.
 func (s *Storage) Delete(key string) (err error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	if e, hit := s.cache[key]; hit {
 		s.remove(e)
+		s.mu.Unlock()
 		return
 	}
+	s.mu.Unlock()
 	return
 }
 
 func (s *Storage) gc() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	timenow := time.Now().Unix()
+
+	s.mu.Lock()
 
 	for e := s.lruList.Back(); e != nil; e = s.lruList.Back() {
 		if timenow > e.Expiration {
@@ -330,4 +338,6 @@ func (s *Storage) gc() {
 			s.freeList.RemoveFront()
 		}
 	}
+
+	s.mu.Unlock()
 }
