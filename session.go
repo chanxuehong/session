@@ -1,4 +1,8 @@
-// version: 1.2.3
+// version: 1.2.4
+// session implements a simple memory-based session container.
+// @link        https://github.com/chanxuehong/session for the canonical source repository
+// @license     https://github.com/chanxuehong/session/blob/master/LICENSE
+// @authors     chanxuehong(chanxuehong@gmail.com)
 
 // session implements a simple memory-based session container.
 //
@@ -106,21 +110,16 @@ func New(maxAge, capacity int, gcInterval time.Duration) *Storage {
 
 	// new goroutine for gc service
 	go func() {
-		gc_interval := gcInterval
-		var gcTick *time.Ticker
-
 	NEW_GC_INTERVAL:
+		ticker := time.NewTicker(gcInterval)
 		for {
-			gcTick = time.NewTicker(gc_interval)
-			for {
-				select {
-				case gc_interval = <-s.gcIntervalResetChan:
-					gcTick.Stop()
-					s.gc() // call gc() immediately
-					break NEW_GC_INTERVAL
-				case <-gcTick.C:
-					s.gc()
-				}
+			select {
+			case gcInterval = <-s.gcIntervalResetChan:
+				ticker.Stop()
+				s.gc() // call gc() immediately
+				goto NEW_GC_INTERVAL
+			case <-ticker.C:
+				s.gc()
 			}
 		}
 	}()
