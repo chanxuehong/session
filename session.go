@@ -116,7 +116,6 @@ func New(maxAge, capacity int, gcInterval time.Duration) *Storage {
 			select {
 			case gcInterval = <-s.gcIntervalResetChan:
 				ticker.Stop()
-				s.gc() // call gc() immediately
 				goto NEW_GC_INTERVAL
 			case <-ticker.C:
 				s.gc()
@@ -159,6 +158,7 @@ func (s *Storage) SetCapacity(capacity int) {
 func (s *Storage) SetGCInterval(gcInterval time.Duration) {
 	if gcInterval >= time.Minute {
 		s.gcIntervalResetChan <- gcInterval
+		s.gc() // call gc() immediately
 	}
 }
 
