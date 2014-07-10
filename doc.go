@@ -6,8 +6,8 @@
 // session implements a simple memory-based session container.
 // version: 1.0.0
 //
-//  NOTE: Suggestion is the number of cached elements does not exceed 10w,
+//  NOTE: Suggestion is the number of cached elements does not exceed 100,000,
 //  because a large number of elements for runtime.GC () is a burden.
-//  More than 10w can consider memcache, redis ...
+//  More than 100,000 can consider memcache, redis ...
 //
 package session

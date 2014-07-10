@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// 转换 Storage 到数组, 要求存储的都是 byte 类型
+// Convert Storage to an array, assuming storage types are byte
 func convert2array(s *Storage) []byte {
 	if len(s.cache) != s.lruList.Len() {
 		panic("len(s.cache) != s.lruList.Len()")
@@ -28,7 +28,7 @@ func convert2array(s *Storage) []byte {
 	return arr
 }
 
-// 常规添加
+// no expiry
 func TestStorageAdd1(t *testing.T) {
 	s := New(1, 10)
 
@@ -46,11 +46,11 @@ func TestStorageAdd1(t *testing.T) {
 	}
 	if err := s.Add("3", byte(3)); err != nil {
 		if err != ErrNotStored {
-			t.Error("错误类型应该是 ErrNotStored")
+			t.Error("the err must be ErrNotStored")
 			return
 		}
 	} else {
-		t.Error("添加重复的字段应该出错")
+		t.Error("Add duplicate keys should go wrong")
 		return
 	}
 	if err := s.Add("4", byte(4)); err != nil {
@@ -66,7 +66,7 @@ func TestStorageAdd1(t *testing.T) {
 	}
 }
 
-// 过期情况下增加
+// has expiry
 func TestStorageAdd2(t *testing.T) {
 	s := New(1, 10)
 
@@ -102,7 +102,7 @@ func TestStorageAdd2(t *testing.T) {
 	}
 }
 
-// 常规删除
+// no expiry
 func TestStorageDelete1(t *testing.T) {
 	s := New(1, 10)
 
@@ -120,11 +120,11 @@ func TestStorageDelete1(t *testing.T) {
 	}
 	if err := s.Delete("4"); err != nil {
 		if err != ErrNotFound {
-			t.Error("错误类型应该是 ErrNotFound")
+			t.Error("the err must be ErrNotFound")
 			return
 		}
 	} else {
-		t.Error("添加重复的字段应该出错")
+		t.Error("Delete elements that does not exist should go wrong")
 		return
 	}
 	if err := s.Delete("2"); err != nil {
@@ -140,7 +140,7 @@ func TestStorageDelete1(t *testing.T) {
 	}
 }
 
-// 过期删除
+// remove elements that expired
 func TestStorageDelete2(t *testing.T) {
 	s := New(1, 10)
 
@@ -159,29 +159,25 @@ func TestStorageDelete2(t *testing.T) {
 
 	time.Sleep(time.Second * 2)
 
-	if err := s.Add("4", byte(4)); err != nil {
-		t.Error(err)
-		return
-	}
 	if err := s.Delete("2"); err != nil {
 		if err != ErrNotFound {
-			t.Error("错误类型应该是 ErrNotFound")
+			t.Error("the err must be ErrNotFound")
 			return
 		}
 	} else {
-		t.Error("添加重复的字段应该出错")
+		t.Error("Delete elements that expired should go wrong")
 		return
 	}
 
 	have := convert2array(s)
-	want := []byte{4, 3}
+	want := []byte{3, 1}
 	if !bytes.Equal(have, want) {
 		t.Error("have:", have, "want:", want)
 		return
 	}
 }
 
-// 常规获取
+// no expiry
 func TestStorageGet1(t *testing.T) {
 	s := New(1, 10)
 
@@ -199,11 +195,11 @@ func TestStorageGet1(t *testing.T) {
 	}
 	if _, err := s.Get("4"); err != nil {
 		if err != ErrNotFound {
-			t.Error("错误类型应该是 ErrNotFound")
+			t.Error("the err must be ErrNotFound")
 			return
 		}
 	} else {
-		t.Error("查找没有的字段应该出错")
+		t.Error("Get elements that does not exist should go wrong")
 		return
 	}
 	if v, err := s.Get("1"); err != nil {
@@ -211,7 +207,7 @@ func TestStorageGet1(t *testing.T) {
 		return
 	} else {
 		if n := v.(byte); n != 1 {
-			t.Error("have:", n, "want:", 1)
+			t.Error(`Get("1"), have:`, n, "want:", 1)
 			return
 		}
 	}
@@ -220,7 +216,7 @@ func TestStorageGet1(t *testing.T) {
 		return
 	} else {
 		if n := v.(byte); n != 2 {
-			t.Error("have:", n, "want:", 2)
+			t.Error(`Get("2"), have:`, n, "want:", 2)
 			return
 		}
 	}
@@ -233,7 +229,7 @@ func TestStorageGet1(t *testing.T) {
 	}
 }
 
-// 过期获取
+// get elements that expired
 func TestStorageGet2(t *testing.T) {
 	s := New(1, 10)
 
@@ -255,11 +251,11 @@ func TestStorageGet2(t *testing.T) {
 
 	if _, err := s.Get("2"); err != nil {
 		if err != ErrNotFound {
-			t.Error("错误类型应该是 ErrNotFound")
+			t.Error("the err must be ErrNotFound")
 			return
 		}
 	} else {
-		t.Error("查找过期的字段应该出错")
+		t.Error("Get elements that expired should go wrong")
 		return
 	}
 	if v, err := s.Get("3"); err != nil {
@@ -267,7 +263,7 @@ func TestStorageGet2(t *testing.T) {
 		return
 	} else {
 		if n := v.(byte); n != 3 {
-			t.Error("have:", n, "want:", 3)
+			t.Error(`Get("3"), have:`, n, "want:", 3)
 			return
 		}
 	}
@@ -280,7 +276,7 @@ func TestStorageGet2(t *testing.T) {
 	}
 }
 
-// 常规设置
+// no expiry
 func TestStorageSet1(t *testing.T) {
 	s := New(1, 10)
 
@@ -313,7 +309,7 @@ func TestStorageSet1(t *testing.T) {
 	}
 }
 
-// 过期设置
+// set elements that expired
 func TestStorageSet2(t *testing.T) {
 	s := New(1, 10)
 
@@ -328,17 +324,13 @@ func TestStorageSet2(t *testing.T) {
 
 	time.Sleep(time.Second * 2)
 
-	if err := s.Set("3", byte(3)); err != nil {
-		t.Error(err)
-		return
-	}
-	if err := s.Set("2", byte(22)); err != nil {
+	if err := s.Set("1", byte(11)); err != nil {
 		t.Error(err)
 		return
 	}
 
 	have := convert2array(s)
-	want := []byte{22, 3}
+	want := []byte{11, 2}
 	if !bytes.Equal(have, want) {
 		t.Error("have:", have, "want:", want)
 		return
@@ -359,6 +351,8 @@ func TestStorageGC(t *testing.T) {
 
 	time.Sleep(time.Second * 3)
 
+	// no expiry, no gc() run
+
 	if err := s.Add("3", byte(3)); err != nil {
 		t.Error(err)
 		return
@@ -376,6 +370,8 @@ func TestStorageGC(t *testing.T) {
 	}
 
 	time.Sleep(time.Second * 3)
+
+	// elements with key "1", "2" has expired, gc() has run
 
 	have = convert2array(s)
 	want = []byte{4, 3}
@@ -399,7 +395,7 @@ func TestStorageSetGCInterval(t *testing.T) {
 
 	time.Sleep(time.Second * 5)
 
-	s.SetGCInterval(5)
+	s.SetGCInterval(5) // elements with key "1", "2" has expired, and call gc()
 
 	have := convert2array(s)
 	want := []byte{}
