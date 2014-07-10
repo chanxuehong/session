@@ -7,7 +7,7 @@
 // version: 1.0.0
 //
 //  NOTE: Suggestion is the number of cached elements does not exceed 100,000,
-//  because a large number of elements for runtime.GC () is a burden.
+//  because a large number of elements for runtime.GC() is a burden.
 //  More than 100,000 can consider memcache, redis ...
 //
 package session
