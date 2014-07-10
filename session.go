@@ -111,7 +111,7 @@ func (s *Storage) Len() (n int) {
 	return
 }
 
-// Set the gc interval of Storage.
+// Set the gc interval of Storage, seconds.
 //  NOTE: if gcInterval <= 0, we do nothing;
 //  after calling this method we will soon do a gc(), please avoid business peak.
 func (s *Storage) SetGCInterval(gcInterval int) {
@@ -216,9 +216,11 @@ func (s *Storage) Set(key string, value interface{}) (err error) {
 // if there is no such element with the key or the element with the key expired
 // it returns ErrNotFound.
 func (s *Storage) Get(key string) (value interface{}, err error) {
+	timenow := time.Now().Unix()
+
 	s.mu.Lock()
 	if e, hit := s.cache[key]; hit {
-		if timenow := time.Now().Unix(); timenow > e.Expiration {
+		if timenow > e.Expiration {
 			s.remove(e)
 			err = ErrNotFound
 
@@ -245,12 +247,14 @@ func (s *Storage) Get(key string) (value interface{}, err error) {
 
 // Delete the element with key.
 // if there is no such element with the key or the element with the key expired
-// it returns ErrNotFound.
+// it returns ErrNotFound, normally you can ignore this error.
 func (s *Storage) Delete(key string) (err error) {
+	timenow := time.Now().Unix()
+
 	s.mu.Lock()
 	if e, hit := s.cache[key]; hit {
 		s.remove(e)
-		if timenow := time.Now().Unix(); timenow > e.Expiration {
+		if timenow > e.Expiration {
 			err = ErrNotFound
 		}
 
