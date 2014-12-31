@@ -19,10 +19,12 @@ func convert2array(s *Storage) []byte {
 
 	arr := make([]byte, s.lruList.Len())
 	for i, e := 0, s.lruList.Front(); e != nil; i, e = i+1, e.Next() {
-		if s.cache[e.Key] != e {
-			panic("s.cache[e.Key] != e")
+		payload := e.Value.(*payload)
+
+		if s.cache[payload.Key] != e {
+			panic("s.cache[e.Value.(*payload).Key] != e")
 		}
-		arr[i] = e.Value.(byte)
+		arr[i] = payload.Value.(byte)
 	}
 
 	return arr
